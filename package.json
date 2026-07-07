@@ -1,0 +1,19 @@
+{
+  "name": "rm-streaming-registro",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "iron-session": "^8.0.1",
+    "cookie-parser": "^1.4.6",
+    "express-session": "^1.18.0"
+  }
+}

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RM STREAMING — Registro de Venta</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <h1>🎬 RM STREAMING</h1>
+    <p>Sistema de Registro de Ventas</p>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="loginUser" placeholder="Usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Iniciar Sesión</button>
+    <div id="loginError" class="error-msg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPage" class="app" style="display:none">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>🎬 RM STREAMING</h2>
+      <span>Registro de Ventas</span>
+    </div>
+    <nav>
+      <a href="#" onclick="showPage('dashboard')" id="nav-dashboard" class="active"><span>📊</span><span>Dashboard</span></a>
+      <a href="#" onclick="showPage('completas')" id="nav-completas"><span>🎭</span><span>Cuenta Completa</span></a>
+      <a href="#" onclick="showPage('madre')" id="nav-madre"><span>👥</span><span>Perfiles</span></a>
+      <a href="#" onclick="showPage('musica')" id="nav-musica"><span>🎵</span><span>Música</span></a>
+      <a href="#" onclick="showPage('tv')" id="nav-tv"><span>📺</span><span>TV Digital</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()">🚪 Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="page-header"><h1>Dashboard</h1><p>Resumen general de ventas</p></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">Ganancia del Mes</div><div class="value" id="st-mes">$0</div><div class="sub">Mes actual</div></div>
+        <div class="stat-card"><div class="label">Ganancia Acumulada</div><div class="value" id="st-acum">$0</div><div class="sub">Desde el inicio</div></div>
+        <div class="stat-card"><div class="label">Total Registros</div><div class="value" id="st-reg">0</div><div class="sub">Todas las categorías</div></div>
+        <div class="stat-card"><div class="label">Más Vendido</div><div class="value" style="font-size:1.1rem" id="st-top">—</div><div class="sub">Categoría líder</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Por Categoría</h2></div>
+        <div class="table-wrap"><table><thead><tr><th>Categoría</th><th>Registros</th></tr></thead>
+        <tbody id="dash-cats"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- CUENTAS COMPLETAS -->
+    <div id="page-completas" class="section-hidden">
+      <div class="page-header"><h1>Cuenta Completa</h1><p>Netflix, Disney+, HBO, etc. — acceso total</p></div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Registros</h2>
+          <div style="display:flex;gap:8px">
+            <input class="search-input" placeholder="🔍 Buscar..." oninput="loadCompletas(this.value)">
+            <button class="btn btn-primary" onclick="openModal('completas')">+ Agregar</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Plataforma</th><th>Correo</th><th>Contraseña</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Proveedor</th><th>WhatsApp</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="tb-completas"><tr class="empty-row"><td colspan="11">Cargando...</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PERFILES (MADRE) -->
+    <div id="page-madre" class="section-hidden">
+      <div class="page-header"><h1>Cuentas con Perfiles</h1><p>Cuenta madre con múltiples perfiles asignados</p></div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Cuentas Madre</h2>
+          <button class="btn btn-primary" onclick="openModal('madre')">+ Agregar Cuenta Madre</button>
+        </div>
+        <div id="madre-list"></div>
+      </div>
+    </div>
+
+    <!-- MÚSICA -->
+    <div id="page-musica" class="section-hidden">
+      <div class="page-header"><h1>Música y Entretenimiento</h1><p>Spotify, Apple Music, YouTube Music, etc.</p></div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Registros</h2>
+          <div style="display:flex;gap:8px">
+            <input class="search-input" placeholder="🔍 Buscar..." oninput="loadMusica(this.value)">
+            <button class="btn btn-primary" onclick="openModal('musica')">+ Agregar</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Producto</th><th>Correo</th><th>Contraseña</th><th>Teléfono</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Proveedor</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="tb-musica"><tr class="empty-row"><td colspan="11">Cargando...</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- TV DIGITAL -->
+    <div id="page-tv" class="section-hidden">
+      <div class="page-header"><h1>TV Digital / IPTV</h1><p>Servicios de televisión digital y IPTV</p></div>
+      <div class="card">
+        <div class="card-header">
+          <h2>Registros</h2>
+          <div style="display:flex;gap:8px">
+            <input class="search-input" placeholder="🔍 Buscar..." oninput="loadTV(this.value)">
+            <button class="btn btn-primary" onclick="openModal('tv')">+ Agregar</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Plataforma</th><th>Usuario</th><th>Contraseña</th><th>Teléfono</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Proveedor</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="tb-tv"><tr class="empty-row"><td colspan="11">Cargando...</td></tr></tbody></table></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODALS -->
+<div id="modal-completas" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-completas-title">➕ Nueva Cuenta Completa</h3>
+    <input type="hidden" id="cc-id">
+    <div class="form-row"><div class="field"><label>Nombre cliente</label><input id="cc-nombre"></div><div class="field"><label>Plataforma</label><input id="cc-plataforma" placeholder="Netflix, Disney+..."></div></div>
+    <div class="form-row"><div class="field"><label>Correo</label><input id="cc-correo" type="email"></div><div class="field"><label>Contraseña</label><input id="cc-contrasena"></div></div>
+    <div class="form-row"><div class="field"><label>WhatsApp</label><input id="cc-whatsapp" placeholder="+58..."></div><div class="field"><label>Proveedor</label><input id="cc-proveedor"></div></div>
+    <div class="form-row"><div class="field"><label>Fecha Compra</label><input id="cc-fecha_compra" type="date"></div><div class="field"><label>Fecha Vencimiento</label><input id="cc-fecha_vencimiento" type="date"></div></div>
+    <div class="form-row"><div class="field"><label>Meses vendidos</label><input id="cc-meses_vendidos" type="number" value="1" min="1"></div><div class="field"><label>Precio (USD)</label><input id="cc-precio" type="number" step="0.01" value="0"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('completas')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCompleta()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-madre" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-madre-title">➕ Nueva Cuenta Madre</h3>
+    <input type="hidden" id="ma-id">
+    <div class="form-row"><div class="field"><label>Plataforma</label><input id="ma-plataforma" placeholder="Netflix, Disney+..."></div><div class="field"><label>N° Perfiles</label><input id="ma-num_perfiles" type="number" value="1" min="1"></div></div>
+    <div class="form-row"><div class="field"><label>Correo</label><input id="ma-correo" type="email"></div><div class="field"><label>Contraseña</label><input id="ma-contrasena"></div></div>
+    <div class="form-row single"><div class="field"><label>Proveedor</label><input id="ma-proveedor"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('madre')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMadre()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-perfil" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-perfil-title">➕ Nuevo Perfil</h3>
+    <input type="hidden" id="pe-id">
+    <input type="hidden" id="pe-madre-id">
+    <div class="form-row"><div class="field"><label>Nombre cliente</label><input id="pe-nombre_cliente"></div><div class="field"><label>Teléfono</label><input id="pe-telefono" placeholder="+58..."></div></div>
+    <div class="form-row"><div class="field"><label>Correo</label><input id="pe-correo" type="email"></div><div class="field"><label>Fecha Vencimiento</label><input id="pe-fecha_vencimiento" type="date"></div></div>
+    <div class="form-row"><div class="field"><label>Meses vendidos</label><input id="pe-meses_vendidos" type="number" value="1" min="1"></div><div class="field"><label>Precio (USD)</label><input id="pe-precio" type="number" step="0.01" value="0"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('perfil')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePerfil()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-musica" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-musica-title">➕ Nueva Música/Entretenimiento</h3>
+    <input type="hidden" id="mu-id">
+    <div class="form-row"><div class="field"><label>Nombre cliente</label><input id="mu-nombre"></div><div class="field"><label>Tipo de Producto</label><input id="mu-tipo_producto" placeholder="Spotify, Apple Music..."></div></div>
+    <div class="form-row"><div class="field"><label>Correo</label><input id="mu-correo" type="email"></div><div class="field"><label>Contraseña</label><input id="mu-contrasena"></div></div>
+    <div class="form-row"><div class="field"><label>Teléfono</label><input id="mu-telefono" placeholder="+58..."></div><div class="field"><label>Proveedor</label><input id="mu-proveedor"></div></div>
+    <div class="form-row"><div class="field"><label>Fecha Compra</label><input id="mu-fecha_compra" type="date"></div><div class="field"><label>Fecha Vencimiento</label><input id="mu-fecha_vencimiento" type="date"></div></div>
+    <div class="form-row"><div class="field"><label>Meses vendidos</label><input id="mu-meses_vendidos" type="number" value="1" min="1"></div><div class="field"><label>Precio (USD)</label><input id="mu-precio" type="number" step="0.01" value="0"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('musica')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMusica()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-tv" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-tv-title">➕ Nueva TV Digital</h3>
+    <input type="hidden" id="tv-id">
+    <div class="form-row"><div class="field"><label>Nombre cliente</label><input id="tv-nombre"></div><div class="field"><label>Plataforma</label><input id="tv-plataforma" placeholder="IPTV, Claro TV..."></div></div>
+    <div class="form-row"><div class="field"><label>Usuario</label><input id="tv-usuario"></div><div class="field"><label>Contraseña</label><input id="tv-contrasena"></div></div>
+    <div class="form-row"><div class="field"><label>Teléfono</label><input id="tv-telefono" placeholder="+58..."></div><div class="field"><label>Proveedor</label><input id="tv-proveedor"></div></div>
+    <div class="form-row"><div class="field"><label>Fecha Compra</label><input id="tv-fecha_compra" type="date"></div><div class="field"><label>Fecha Vencimiento</label><input id="tv-fecha_vencimiento" type="date"></div></div>
+    <div class="form-row"><div class="field"><label>Meses vendidos</label><input id="tv-meses_vendidos" type="number" value="1" min="1"></div><div class="field"><label>Precio (USD)</label><input id="tv-precio" type="number" step="0.01" value="0"></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="closeModal('tv')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTV()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPage = 'dashboard';
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const r = await fetch('/api/me');
+  const d = await r.json();
+  if (d.loggedIn) showApp();
+  else showLogin();
+}
+function showLogin(){ document.getElementById('loginPage').style.display='flex'; document.getElementById('appPage').style.display='none'; }
+function showApp(){ document.getElementById('loginPage').style.display='none'; document.getElementById('appPage').style.display='flex'; loadDashboard(); }
+async function doLogin(){
+  const u=document.getElementById('loginUser').value;
+  const p=document.getElementById('loginPass').value;
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+  const d=await r.json();
+  if(d.success) showApp();
+  else document.getElementById('loginError').textContent=d.error||'Error de acceso';
+}
+async function doLogout(){
+  await fetch('/api/logout',{method:'POST'});
+  showLogin();
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(p){
+  document.querySelectorAll('[id^="page-"]').forEach(el=>el.classList.add('section-hidden'));
+  document.querySelectorAll('.sidebar nav a').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.remove('section-hidden');
+  document.getElementById('nav-'+p).classList.add('active');
+  currentPage=p;
+  if(p==='dashboard') loadDashboard();
+  else if(p==='completas') loadCompletas();
+  else if(p==='madre') loadMadre();
+  else if(p==='musica') loadMusica();
+  else if(p==='tv') loadTV();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(n){ return parseFloat(n||0).toFixed(2); }
+function statusBadge(fv){
+  if(!fv) return '<span class="badge badge-warn">Sin fecha</span>';
+  const d=new Date(fv), now=new Date(), diff=Math.ceil((d-now)/(1000*60*60*24));
+  if(diff<0) return '<span class="badge badge-danger">Vencido</span>';
+  if(diff<=7) return `<span class="badge badge-warn">⚠ ${diff}d</span>`;
+  return `<span class="badge badge-ok">${diff}d</span>`;
+}
+function wa(num){ if(!num) return ''; const n=num.replace(/\D/g,''); return `<a class="wa-btn" href="https://wa.me/${n}" target="_blank">📱</a>`; }
+function openModal(t){ document.getElementById('modal-'+t).classList.add('open'); }
+function closeModal(t){ document.getElementById('modal-'+t).classList.remove('open'); clearForm(t); }
+function clearForm(t){
+  document.querySelectorAll('#modal-'+t+' input').forEach(i=>{
+    i.value = i.type==='number' ? (i.id.includes('meses')?'1':'0') : '';
+  });
+}
+function val(id){ return document.getElementById(id).value; }
+function setVal(id,v){ document.getElementById(id).value=v||''; }
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+async function loadDashboard(){
+  const r=await fetch('/api/dashboard'); const d=await r.json();
+  document.getElementById('st-mes').textContent='$'+fmt(d.ganancia_mes);
+  document.getElementById('st-acum').textContent='$'+fmt(d.ganancia_acumulada);
+  document.getElementById('st-reg').textContent=d.total_registros;
+  document.getElementById('st-top').textContent=d.mas_vendido||'—';
+  document.getElementById('dash-cats').innerHTML=(d.categorias||[]).map(c=>
+    `<tr><td>${c.nombre}</td><td>${c.count}</td></tr>`).join('');
+}
+
+// ── CUENTAS COMPLETAS ─────────────────────────────────────────────────────────
+async function loadCompletas(q=''){
+  const r=await fetch('/api/cuentas/completas?q='+encodeURIComponent(q));
+  const data=await r.json();
+  const tb=document.getElementById('tb-completas');
+  if(!data.length){ tb.innerHTML='<tr class="empty-row"><td colspan="11">Sin registros</td></tr>'; return; }
+  tb.innerHTML=data.map(c=>`<tr>
+    <td>${c.nombre||''}</td><td>${c.plataforma||''}</td><td>${c.correo||''}</td><td>${c.contrasena||''}</td>
+    <td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td><td>${c.meses_vendidos||1}</td>
+    <td>$${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
+    <td>${c.whatsapp||''}${wa(c.whatsapp)}</td><td>${statusBadge(c.fecha_vencimiento)}</td>
+    <td><button class="btn btn-warning btn-sm" onclick='editCompleta(${JSON.stringify(c)})'>✏</button>
+    <button class="btn btn-danger btn-sm" onclick="delCompleta(${c.id})">🗑</button></td></tr>`).join('');
+}
+function openModal_completas(){ openModal('completas'); document.getElementById('modal-completas-title').textContent='➕ Nueva Cuenta Completa'; }
+function editCompleta(c){
+  document.getElementById('modal-completas-title').textContent='✏ Editar Cuenta Completa';
+  setVal('cc-id',c.id); setVal('cc-nombre',c.nombre); setVal('cc-plataforma',c.plataforma);
+  setVal('cc-correo',c.correo); setVal('cc-contrasena',c.contrasena); setVal('cc-whatsapp',c.whatsapp);
+  setVal('cc-proveedor',c.proveedor); setVal('cc-fecha_compra',c.fecha_compra?c.fecha_compra.split('T')[0]:'');
+  setVal('cc-fecha_vencimiento',c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:'');
+  setVal('cc-meses_vendidos',c.meses_vendidos); setVal('cc-precio',c.precio);
+  openModal('completas');
+}
+async function saveCompleta(){
+  const id=val('cc-id');
+  const body={nombre:val('cc-nombre'),correo:val('cc-correo'),contrasena:val('cc-contrasena'),plataforma:val('cc-plataforma'),
+    fecha_compra:val('cc-fecha_compra')||null,fecha_vencimiento:val('cc-fecha_vencimiento')||null,
+    meses_vendidos:parseInt(val('cc-meses_vendidos'))||1,whatsapp:val('cc-whatsapp'),
+    proveedor:val('cc-proveedor'),precio:parseFloat(val('cc-precio'))||0};
+  const r=await fetch(id?`/api/cuentas/completas/${id}`:'/api/cuentas/completas',
+    {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ closeModal('completas'); loadCompletas(); }
+  else alert('Error al guardar');
+}
+async function delCompleta(id){ if(!confirm('¿Eliminar?')) return; await fetch(`/api/cuentas/completas/${id}`,{method:'DELETE'}); loadCompletas(); }
+
+// ── CUENTAS MADRE ─────────────────────────────────────────────────────────────
+async function loadMadre(){
+  const r=await fetch('/api/cuentas/madre'); const data=await r.json();
+  const el=document.getElementById('madre-list');
+  if(!data.length){ el.innerHTML='<div style="padding:40px;text-align:center;color:#555">Sin cuentas madre</div>'; return; }
+  el.innerHTML=data.map(m=>`
+    <div style="border-bottom:1px solid #00d4ff11;padding:16px 20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div><strong style="color:#00d4ff">${m.plataforma||''}</strong>
+          <span style="color:#888;font-size:0.8rem;margin-left:8px">${m.correo||''} / ${m.contrasena||''}</span>
+          <span style="color:#666;font-size:0.8rem;margin-left:8px">Proveedor: ${m.proveedor||''}</span>
+          <span style="color:#666;font-size:0.8rem;margin-left:8px">${m.num_perfiles||1} perfiles</span></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary btn-sm" onclick='openPerfilModal(${m.id})'>+ Perfil</button>
+          <button class="btn btn-warning btn-sm" onclick='editMadre(${JSON.stringify(m)})'>✏</button>
+          <button class="btn btn-danger btn-sm" onclick="delMadre(${m.id})">🗑</button>
+        </div>
+      </div>
+      ${m.perfiles&&m.perfiles.length?`<div class="table-wrap"><table>
+        <thead><tr><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody>${m.perfiles.map(p=>`<tr>
+          <td>${p.nombre_cliente||''}</td><td>${p.telefono||''}${wa(p.telefono)}</td><td>${p.correo||''}</td>
+          <td>${p.fecha_vencimiento?p.fecha_vencimiento.split('T')[0]:''}</td>
+          <td>${p.meses_vendidos||1}</td><td>$${fmt(p.precio)}</td><td>${statusBadge(p.fecha_vencimiento)}</td>
+          <td><button class="btn btn-warning btn-sm" onclick='editPerfil(${JSON.stringify(p)})'>✏</button>
+          <button class="btn btn-danger btn-sm" onclick="delPerfil(${p.id})">🗑</button></td></tr>`).join('')}
+        </tbody></table></div>`:'<div style="color:#555;font-size:0.85rem;padding:8px 0">Sin perfiles asignados</div>'}
+    </div>`).join('');
+}
+function editMadre(m){
+  document.getElementById('modal-madre-title').textContent='✏ Editar Cuenta Madre';
+  setVal('ma-id',m.id); setVal('ma-plataforma',m.plataforma); setVal('ma-correo',m.correo);
+  setVal('ma-contrasena',m.contrasena); setVal('ma-proveedor',m.proveedor); setVal('ma-num_perfiles',m.num_perfiles);
+  openModal('madre');
+}
+async function saveMadre(){
+  const id=val('ma-id');
+  const body={plataforma:val('ma-plataforma'),correo:val('ma-correo'),contrasena:val('ma-contrasena'),
+    proveedor:val('ma-proveedor'),num_perfiles:parseInt(val('ma-num_perfiles'))||1};
+  const r=await fetch(id?`/api/cuentas/madre/${id}`:'/api/cuentas/madre',
+    {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ closeModal('madre'); loadMadre(); }
+  else alert('Error al guardar');
+}
+async function delMadre(id){ if(!confirm('¿Eliminar cuenta madre y todos sus perfiles?')) return; await fetch(`/api/cuentas/madre/${id}`,{method:'DELETE'}); loadMadre(); }
+function openPerfilModal(madreId){ setVal('pe-id',''); setVal('pe-madre-id',madreId); document.getElementById('modal-perfil-title').textContent='➕ Nuevo Perfil'; openModal('perfil'); }
+function editPerfil(p){
+  document.getElementById('modal-perfil-title').textContent='✏ Editar Perfil';
+  setVal('pe-id',p.id); setVal('pe-madre-id',p.cuenta_madre_id); setVal('pe-nombre_cliente',p.nombre_cliente);
+  setVal('pe-telefono',p.telefono); setVal('pe-correo',p.correo);
+  setVal('pe-fecha_vencimiento',p.fecha_vencimiento?p.fecha_vencimiento.split('T')[0]:'');
+  setVal('pe-meses_vendidos',p.meses_vendidos); setVal('pe-precio',p.precio);
+  openModal('perfil');
+}
+async function savePerfil(){
+  const id=val('pe-id'), mid=val('pe-madre-id');
+  const body={nombre_cliente:val('pe-nombre_cliente'),telefono:val('pe-telefono'),correo:val('pe-correo'),
+    fecha_vencimiento:val('pe-fecha_vencimiento')||null,meses_vendidos:parseInt(val('pe-meses_vendidos'))||1,
+    precio:parseFloat(val('pe-precio'))||0,cuenta_madre_id:parseInt(mid)};
+  const r=await fetch(id?`/api/cuentas/perfiles/${id}`:'/api/cuentas/madre',
+    {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(id?body:{...body,perfiles:[body]})});
+  if(r.ok){ closeModal('perfil'); loadMadre(); }
+  else alert('Error al guardar');
+}
+async function delPerfil(id){ if(!confirm('¿Eliminar perfil?')) return; await fetch(`/api/cuentas/perfiles/${id}`,{method:'DELETE'}); loadMadre(); }
+
+// ── MÚSICA ────────────────────────────────────────────────────────────────────
+async function loadMusica(q=''){
+  const r=await fetch('/api/musica?q='+encodeURIComponent(q)); const data=await r.json();
+  const tb=document.getElementById('tb-musica');
+  if(!data.length){ tb.innerHTML='<tr class="empty-row"><td colspan="11">Sin registros</td></tr>'; return; }
+  tb.innerHTML=data.map(c=>`<tr>
+    <td>${c.nombre||''}</td><td>${c.tipo_producto||''}</td><td>${c.correo||''}</td><td>${c.contrasena||''}</td>
+    <td>${c.telefono||''}${wa(c.telefono)}</td><td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td>
+    <td>${c.meses_vendidos||1}</td><td>$${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
+    <td>${statusBadge(c.fecha_vencimiento)}</td>
+    <td><button class="btn btn-warning btn-sm" onclick='editMusica(${JSON.stringify(c)})'>✏</button>
+    <button class="btn btn-danger btn-sm" onclick="delMusica(${c.id})">🗑</button></td></tr>`).join('');
+}
+function editMusica(c){
+  document.getElementById('modal-musica-title').textContent='✏ Editar Música';
+  setVal('mu-id',c.id); setVal('mu-nombre',c.nombre); setVal('mu-tipo_producto',c.tipo_producto);
+  setVal('mu-correo',c.correo); setVal('mu-contrasena',c.contrasena); setVal('mu-telefono',c.telefono);
+  setVal('mu-proveedor',c.proveedor); setVal('mu-fecha_compra',c.fecha_compra?c.fecha_compra.split('T')[0]:'');
+  setVal('mu-fecha_vencimiento',c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:'');
+  setVal('mu-meses_vendidos',c.meses_vendidos); setVal('mu-precio',c.precio);
+  openModal('musica');
+}
+async function saveMusica(){
+  const id=val('mu-id');
+  const body={nombre:val('mu-nombre'),correo:val('mu-correo'),contrasena:val('mu-contrasena'),telefono:val('mu-telefono'),
+    tipo_producto:val('mu-tipo_producto'),fecha_compra:val('mu-fecha_compra')||null,fecha_vencimiento:val('mu-fecha_vencimiento')||null,
+    meses_vendidos:parseInt(val('mu-meses_vendidos'))||1,proveedor:val('mu-proveedor'),precio:parseFloat(val('mu-precio'))||0};
+  const r=await fetch(id?`/api/musica/${id}`:'/api/musica',
+    {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ closeModal('musica'); loadMusica(); }
+  else alert('Error al guardar');
+}
+async function delMusica(id){ if(!confirm('¿Eliminar?')) return; await fetch(`/api/musica/${id}`,{method:'DELETE'}); loadMusica(); }
+
+// ── TV DIGITAL ────────────────────────────────────────────────────────────────
+async function loadTV(q=''){
+  const r=await fetch('/api/tv-digital?q='+encodeURIComponent(q)); const data=await r.json();
+  const tb=document.getElementById('tb-tv');
+  if(!data.length){ tb.innerHTML='<tr class="empty-row"><td colspan="11">Sin registros</td></tr>'; return; }
+  tb.innerHTML=data.map(c=>`<tr>
+    <td>${c.nombre||''}</td><td>${c.plataforma||''}</td><td>${c.usuario||''}</td><td>${c.contrasena||''}</td>
+    <td>${c.telefono||''}${wa(c.telefono)}</td><td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td>
+    <td>${c.meses_vendidos||1}</td><td>$${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
+    <td>${statusBadge(c.fecha_vencimiento)}</td>
+    <td><button class="btn btn-warning btn-sm" onclick='editTV(${JSON.stringify(c)})'>✏</button>
+    <button class="btn btn-danger btn-sm" onclick="delTV(${c.id})">🗑</button></td></tr>`).join('');
+}
+function editTV(c){
+  document.getElementById('modal-tv-title').textContent='✏ Editar TV Digital';
+  setVal('tv-id',c.id); setVal('tv-nombre',c.nombre); setVal('tv-plataforma',c.plataforma);
+  setVal('tv-usuario',c.usuario); setVal('tv-contrasena',c.contrasena); setVal('tv-telefono',c.telefono);
+  setVal('tv-proveedor',c.proveedor); setVal('tv-fecha_compra',c.fecha_compra?c.fecha_compra.split('T')[0]:'');
+  setVal('tv-fecha_vencimiento',c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:'');
+  setVal('tv-meses_vendidos',c.meses_vendidos); setVal('tv-precio',c.precio);
+  openModal('tv');
+}
+async function saveTV(){
+  const id=val('tv-id');
+  const body={nombre:val('tv-nombre'),usuario:val('tv-usuario'),contrasena:val('tv-contrasena'),telefono:val('tv-telefono'),
+    plataforma:val('tv-plataforma'),fecha_compra:val('tv-fecha_compra')||null,fecha_vencimiento:val('tv-fecha_vencimiento')||null,
+    meses_vendidos:parseInt(val('tv-meses_vendidos'))||1,proveedor:val('tv-proveedor'),precio:parseFloat(val('tv-precio'))||0};
+  const r=await fetch(id?`/api/tv-digital/${id}`:'/api/tv-digital',
+    {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ closeModal('tv'); loadTV(); }
+  else alert('Error al guardar');
+}
+async function delTV(id){ if(!confirm('¿Eliminar?')) return; await fetch(`/api/tv-digital/${id}`,{method:'DELETE'}); loadTV(); }
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+init();
+</script>
+</body>
+</html>

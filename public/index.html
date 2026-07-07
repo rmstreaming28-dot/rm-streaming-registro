@@ -148,7 +148,7 @@
   <div class="modal">
     <h3 id="modal-madre-title">➕ Nueva Cuenta Madre</h3>
     <input type="hidden" id="ma-id">
-    <div class="form-row"><div class="field"><label>Plataforma</label><input id="ma-plataforma" placeholder="Netflix, Disney+..."></div><div class="field"><label>N° Perfiles</label><input id="ma-num_perfiles" type="number" value="1" min="1"></div></div>
+    <div class="form-row"><div class="field"><label>Plataforma</label><input id="ma-plataforma" placeholder="Netflix, Disney+..."></div><div class="field"><label>Cantidad de Perfiles</label><input id="ma-num_perfiles" type="number" value="1" min="1"></div></div>
     <div class="form-row"><div class="field"><label>Correo</label><input id="ma-correo" type="email"></div><div class="field"><label>Contraseña</label><input id="ma-contrasena"></div></div>
     <div class="form-row single"><div class="field"><label>Proveedor</label><input id="ma-proveedor"></div></div>
     <div class="modal-actions">
@@ -395,8 +395,10 @@ async function delMadre(id){ if(!confirm('¿Eliminar cuenta madre y todos sus pe
 function openPerfilModal(madreId){ setVal('pe-id',''); setVal('pe-madre-id',madreId); document.getElementById('modal-perfil-title').textContent='➕ Nuevo Perfil'; openModal('perfil'); }
 function editPerfil(p){
   document.getElementById('modal-perfil-title').textContent='✏ Editar Perfil';
-  setVal('pe-id',p.id); setVal('pe-madre-id',p.cuenta_madre_id); setVal('pe-nombre_cliente',p.nombre_cliente);
-  setVal('pe-telefono',p.telefono); setVal('pe-correo',p.correo);
+  setVal('pe-id',p.id); setVal('pe-madre-id',p.cuenta_madre_id);
+  setVal('pe-nombre_cliente',p.nombre_cliente); setVal('pe-telefono',p.telefono);
+  setVal('pe-correo',p.correo);
+  setVal('pe-fecha_compra',p.fecha_compra?p.fecha_compra.split('T')[0]:'');
   setVal('pe-fecha_vencimiento',p.fecha_vencimiento?p.fecha_vencimiento.split('T')[0]:'');
   setVal('pe-meses_vendidos',p.meses_vendidos); setVal('pe-precio',p.precio);
   openModal('perfil');
@@ -404,10 +406,12 @@ function editPerfil(p){
 async function savePerfil(){
   const id=val('pe-id'), mid=val('pe-madre-id');
   const body={nombre_cliente:val('pe-nombre_cliente'),telefono:val('pe-telefono'),correo:val('pe-correo'),
-    fecha_vencimiento:val('pe-fecha_vencimiento')||null,meses_vendidos:parseInt(val('pe-meses_vendidos'))||1,
+    fecha_compra:val('pe-fecha_compra')||null,fecha_vencimiento:val('pe-fecha_vencimiento')||null,
+    meses_vendidos:parseInt(val('pe-meses_vendidos'))||1,
     precio:parseFloat(val('pe-precio'))||0,cuenta_madre_id:parseInt(mid)};
-  const r=await fetch(id?`/api/cuentas/perfiles/${id}`:'/api/cuentas/madre',
-    {method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(id?body:{...body,perfiles:[body]})});
+  const url = id ? `/api/cuentas/perfiles/${id}` : '/api/cuentas/madre';
+  const payload = id ? body : {...body, perfiles:[body]};
+  const r=await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   if(r.ok){ closeModal('perfil'); loadMadre(); }
   else alert('Error al guardar');
 }

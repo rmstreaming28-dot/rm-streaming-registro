@@ -75,4 +75,23 @@ app.delete('/api/tv-digital/:id',auth,async(req,res)=>{ try{ await pool.query(`D
 
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 
-app.listen(PORT, async()=>{ console.log('RM Streaming port',PORT); try{ await initDB(); console.log('DB OK'); }catch(e){ console.error('DB err',e.message); } });
+
+
+// ── KEEP-ALIVE: auto-ping cada 10 min para evitar que el server se duerma ──
+app.get('/api/ping', (req,res)=>res.json({ok:true,ts:Date.now()}));
+app.listen(PORT, async()=>{
+  console.log('RM Streaming port',PORT);
+  try{ await initDB(); console.log('DB OK'); }catch(e){ console.error('DB err',e.message); }
+  const https=require('https'),http=require('http');
+  const SELF=process.env.APP_URL||(process.env.REPL_SLUG?'https://'+process.env.REPL_SLUG+'.'+process.env.REPL_OWNER+'.repl.co':null);
+  if(SELF){
+    setInterval(()=>{
+      const mod=SELF.startsWith('https')?https:http;
+      mod.get(SELF+'/api/ping',(r)=>r.resume()).on('error',()=>{});
+      console.log('keep-alive ping ->',SELF+'/api/ping');
+    }, 10*60*1000);
+    console.log('keep-alive activo ->',SELF);
+  } else {
+    console.log('keep-alive: define APP_URL en env para activar ping externo');
+  }
+});

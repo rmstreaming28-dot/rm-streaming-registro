@@ -83,7 +83,7 @@ app.listen(PORT, async()=>{
   console.log('RM Streaming port',PORT);
   try{ await initDB(); console.log('DB OK'); }catch(e){ console.error('DB err',e.message); }
   const https=require('https'),http=require('http');
-  const SELF=process.env.APP_URL||(process.env.REPL_SLUG?'https://'+process.env.REPL_SLUG+'.'+process.env.REPL_OWNER+'.repl.co':null);
+  const SELF=process.env.APP_URL||'https://rm-streaming-registro.onrender.com';
   if(SELF){
     setInterval(()=>{
       const mod=SELF.startsWith('https')?https:http;

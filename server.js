@@ -23,6 +23,8 @@ app.use(session({
 
 // Init DB
 async function initDB() {
+  // Add fecha_compra to perfiles if missing (migration)
+  await pool.query(`ALTER TABLE IF EXISTS perfiles ADD COLUMN IF NOT EXISTS fecha_compra DATE`).catch(()=>{});
   await pool.query(`
     CREATE TABLE IF NOT EXISTS cuentas_completas (
       id SERIAL PRIMARY KEY, nombre VARCHAR(255), correo VARCHAR(255),
@@ -39,8 +41,8 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS perfiles (
       id SERIAL PRIMARY KEY, cuenta_madre_id INTEGER REFERENCES cuentas_madre(id) ON DELETE CASCADE,
       nombre_cliente VARCHAR(255), telefono VARCHAR(50), correo VARCHAR(255),
-      fecha_vencimiento DATE, meses_vendidos INTEGER DEFAULT 1, precio DECIMAL(10,2) DEFAULT 0,
-      created_at TIMESTAMP DEFAULT NOW()
+      fecha_compra DATE, fecha_vencimiento DATE, meses_vendidos INTEGER DEFAULT 1,
+      precio DECIMAL(10,2) DEFAULT 0, created_at TIMESTAMP DEFAULT NOW()
     );
     CREATE TABLE IF NOT EXISTS musica (
       id SERIAL PRIMARY KEY, nombre VARCHAR(255), correo VARCHAR(255),
@@ -175,8 +177,8 @@ app.post('/api/cuentas/madre', auth, async (req,res) => {
     const mid = m.rows[0].id;
     if (perfiles && perfiles.length) {
       for (const p of perfiles)
-        await client.query(`INSERT INTO perfiles (cuenta_madre_id,nombre_cliente,telefono,correo,fecha_vencimiento,meses_vendidos,precio) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-          [mid,p.nombre_cliente,p.telefono,p.correo,p.fecha_vencimiento||null,p.meses_vendidos||1,p.precio||0]);
+        await client.query(`INSERT INTO perfiles (cuenta_madre_id,nombre_cliente,telefono,correo,fecha_compra,fecha_vencimiento,meses_vendidos,precio) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [mid,p.nombre_cliente,p.telefono,p.correo,p.fecha_compra||null,p.fecha_vencimiento||null,p.meses_vendidos||1,p.precio||0]);
     }
     await client.query('COMMIT');
     res.json(m.rows[0]);
@@ -197,11 +199,18 @@ app.delete('/api/cuentas/madre/:id', auth, async (req,res) => {
   catch(e){ res.status(500).json({error:String(e)}); }
 });
 app.put('/api/cuentas/perfiles/:id', auth, async (req,res) => {
-  const {nombre_cliente,telefono,correo,fecha_vencimiento,meses_vendidos,precio}=req.body;
+  const {nombre_cliente,telefono,correo,fecha_compra,fecha_vencimiento,meses_vendidos,precio}=req.body;
+  // Support partial update (e.g. renovar only sends fecha_vencimiento)
+  if (Object.keys(req.body).length === 1 && req.body.fecha_vencimiento !== undefined) {
+    try {
+      const r = await pool.query(`UPDATE perfiles SET fecha_vencimiento=$1 WHERE id=$2 RETURNING *`,[fecha_vencimiento,req.params.id]);
+      return res.json(r.rows[0]);
+    } catch(e){ return res.status(500).json({error:String(e)}); }
+  }
   try {
     const r = await pool.query(
-      `UPDATE perfiles SET nombre_cliente=$1,telefono=$2,correo=$3,fecha_vencimiento=$4,meses_vendidos=$5,precio=$6 WHERE id=$7 RETURNING *`,
-      [nombre_cliente,telefono,correo,fecha_vencimiento||null,meses_vendidos||1,precio||0,req.params.id]);
+      `UPDATE perfiles SET nombre_cliente=$1,telefono=$2,correo=$3,fecha_compra=$4,fecha_vencimiento=$5,meses_vendidos=$6,precio=$7 WHERE id=$8 RETURNING *`,
+      [nombre_cliente,telefono,correo,fecha_compra||null,fecha_vencimiento||null,meses_vendidos||1,precio||0,req.params.id]);
     res.json(r.rows[0]);
   } catch(e){ res.status(500).json({error:String(e)}); }
 });

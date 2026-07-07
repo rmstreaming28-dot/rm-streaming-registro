@@ -25,9 +25,13 @@
   </div>
 </div>
 
+<!-- HAMBURGER -->
+<button class="hamburger" onclick="toggleSidebar()" id="hamburgerBtn">☰</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <!-- APP -->
 <div id="appPage" class="app" style="display:none">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <h2>🎬 RM STREAMING</h2>
       <span>Registro de Ventas</span>
@@ -159,9 +163,10 @@
     <h3 id="modal-perfil-title">➕ Nuevo Perfil</h3>
     <input type="hidden" id="pe-id">
     <input type="hidden" id="pe-madre-id">
-    <div class="form-row"><div class="field"><label>Nombre cliente</label><input id="pe-nombre_cliente"></div><div class="field"><label>Teléfono</label><input id="pe-telefono" placeholder="+58..."></div></div>
-    <div class="form-row"><div class="field"><label>Correo</label><input id="pe-correo" type="email"></div><div class="field"><label>Fecha Vencimiento</label><input id="pe-fecha_vencimiento" type="date"></div></div>
-    <div class="form-row"><div class="field"><label>Meses vendidos</label><input id="pe-meses_vendidos" type="number" value="1" min="1"></div><div class="field"><label>Precio (USD)</label><input id="pe-precio" type="number" step="0.01" value="0"></div></div>
+    <div class="form-row"><div class="field"><label>Nombre cliente</label><input id="pe-nombre_cliente"></div><div class="field"><label>Teléfono / WhatsApp</label><input id="pe-telefono" placeholder="+58..."></div></div>
+    <div class="form-row"><div class="field"><label>Correo</label><input id="pe-correo" type="email"></div><div class="field"><label>Fecha Compra</label><input id="pe-fecha_compra" type="date"></div></div>
+    <div class="form-row"><div class="field"><label>Fecha Vencimiento</label><input id="pe-fecha_vencimiento" type="date"></div><div class="field"><label>Meses vendidos</label><input id="pe-meses_vendidos" type="number" value="1" min="1"></div></div>
+    <div class="form-row single"><div class="field"><label>Precio (USD)</label><input id="pe-precio" type="number" step="0.01" value="0"></div></div>
     <div class="modal-actions">
       <button class="btn btn-danger" onclick="closeModal('perfil')">Cancelar</button>
       <button class="btn btn-primary" onclick="savePerfil()">Guardar</button>
@@ -249,22 +254,33 @@ function statusBadge(fv){
   if(diff<=7) return `<span class="badge badge-warn">⚠ ${diff}d</span>`;
   return `<span class="badge badge-ok">${diff}d</span>`;
 }
-function wa(num, nombre, plataforma, fecha_vencimiento){
-  if(!num) return '';
+// Store perfil data to avoid JSON escaping issues in onclick
+const _perfilData = {};
+const _completaData = {};
+const _musicaData = {};
+const _tvData = {};
+
+function wa(num, nombre, plataforma, fv){
+  if(!num || !num.trim()) return '';
   const n = num.replace(/\D/g,'');
-  const fv = fecha_vencimiento ? fecha_vencimiento.split('T')[0] : 'pronto';
-  const msg = encodeURIComponent(`Hola ${nombre||''}, te recuerdo que tu ${plataforma||'servicio'} vence el ${fv}. ¿Deseas renovar? 😊`);
-  return `<a class="wa-btn" href="https://wa.me/${n}?text=${msg}" target="_blank" title="Enviar WhatsApp">📱 WhatsApp</a>`;
+  if(!n) return '';
+  const fecha = fv ? fv.split('T')[0] : 'pronto';
+  const msg = encodeURIComponent('Hola ' + (nombre||'') + ', te recuerdo que tu ' + (plataforma||'servicio') + ' vence el ' + fecha + '. ¿Deseas renovar? 😊');
+  return '<a class="wa-link" href="https://wa.me/' + n + '?text=' + msg + '" target="_blank">📱 WhatsApp</a>';
 }
+
 function renovar(tipo, id, fv, meses){
-  const base = fv ? new Date(fv) : new Date();
+  const base = fv && fv.length > 0 ? new Date(fv.split('T')[0]) : new Date();
   base.setMonth(base.getMonth() + (parseInt(meses)||1));
   const nueva = base.toISOString().split('T')[0];
-  if(!confirm(`¿Renovar por ${meses} mes(es)? Nueva fecha: ${nueva}`)) return;
+  if(!confirm('¿Renovar por ' + meses + ' mes(es)?\nNueva fecha de vencimiento: ' + nueva)) return;
   const urls = {cc:'/api/cuentas/completas/',pe:'/api/cuentas/perfiles/',mu:'/api/musica/',tv:'/api/tv-digital/'};
   fetch(urls[tipo]+id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({fecha_vencimiento: nueva})})
-    .then(()=>{ if(tipo==='cc') loadCompletas(); else if(tipo==='pe') loadMadre(); else if(tipo==='mu') loadMusica(); else loadTV(); });
+    .then(r=>r.json()).then(()=>{ if(tipo==='cc') loadCompletas(); else if(tipo==='pe') loadMadre(); else if(tipo==='mu') loadMusica(); else loadTV(); });
 }
+
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
 function openModal(t){ document.getElementById('modal-'+t).classList.add('open'); }
 function closeModal(t){ document.getElementById('modal-'+t).classList.remove('open'); clearForm(t); }
 function clearForm(t){

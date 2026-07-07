@@ -249,7 +249,22 @@ function statusBadge(fv){
   if(diff<=7) return `<span class="badge badge-warn">⚠ ${diff}d</span>`;
   return `<span class="badge badge-ok">${diff}d</span>`;
 }
-function wa(num){ if(!num) return ''; const n=num.replace(/\D/g,''); return `<a class="wa-btn" href="https://wa.me/${n}" target="_blank">📱</a>`; }
+function wa(num, nombre, plataforma, fecha_vencimiento){
+  if(!num) return '';
+  const n = num.replace(/\D/g,'');
+  const fv = fecha_vencimiento ? fecha_vencimiento.split('T')[0] : 'pronto';
+  const msg = encodeURIComponent(`Hola ${nombre||''}, te recuerdo que tu ${plataforma||'servicio'} vence el ${fv}. ¿Deseas renovar? 😊`);
+  return `<a class="wa-btn" href="https://wa.me/${n}?text=${msg}" target="_blank" title="Enviar WhatsApp">📱 WhatsApp</a>`;
+}
+function renovar(tipo, id, fv, meses){
+  const base = fv ? new Date(fv) : new Date();
+  base.setMonth(base.getMonth() + (parseInt(meses)||1));
+  const nueva = base.toISOString().split('T')[0];
+  if(!confirm(`¿Renovar por ${meses} mes(es)? Nueva fecha: ${nueva}`)) return;
+  const urls = {cc:'/api/cuentas/completas/',pe:'/api/cuentas/perfiles/',mu:'/api/musica/',tv:'/api/tv-digital/'};
+  fetch(urls[tipo]+id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({fecha_vencimiento: nueva})})
+    .then(()=>{ if(tipo==='cc') loadCompletas(); else if(tipo==='pe') loadMadre(); else if(tipo==='mu') loadMusica(); else loadTV(); });
+}
 function openModal(t){ document.getElementById('modal-'+t).classList.add('open'); }
 function closeModal(t){ document.getElementById('modal-'+t).classList.remove('open'); clearForm(t); }
 function clearForm(t){
@@ -281,9 +296,13 @@ async function loadCompletas(q=''){
     <td>${c.nombre||''}</td><td>${c.plataforma||''}</td><td>${c.correo||''}</td><td>${c.contrasena||''}</td>
     <td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td><td>${c.meses_vendidos||1}</td>
     <td>$${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
-    <td>${c.whatsapp||''}${wa(c.whatsapp)}</td><td>${statusBadge(c.fecha_vencimiento)}</td>
-    <td><button class="btn btn-warning btn-sm" onclick='editCompleta(${JSON.stringify(c)})'>✏</button>
-    <button class="btn btn-danger btn-sm" onclick="delCompleta(${c.id})">🗑</button></td></tr>`).join('');
+    <td>${statusBadge(c.fecha_vencimiento)}</td>
+    <td style="white-space:nowrap">
+      ${wa(c.whatsapp, c.nombre, c.plataforma, c.fecha_vencimiento)}
+      <button class="btn btn-success btn-sm" onclick="renovar('cc',${c.id},'${c.fecha_vencimiento||''}',${c.meses_vendidos||1})" title="Renovar">🔄 Renovar</button>
+      <button class="btn btn-warning btn-sm" onclick='editCompleta(${JSON.stringify(c)})'>✏</button>
+      <button class="btn btn-danger btn-sm" onclick="delCompleta(${c.id})">🗑</button>
+    </td></tr>`).join('');
 }
 function openModal_completas(){ openModal('completas'); document.getElementById('modal-completas-title').textContent='➕ Nueva Cuenta Completa'; }
 function editCompleta(c){
@@ -329,11 +348,15 @@ async function loadMadre(){
       ${m.perfiles&&m.perfiles.length?`<div class="table-wrap"><table>
         <thead><tr><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody>${m.perfiles.map(p=>`<tr>
-          <td>${p.nombre_cliente||''}</td><td>${p.telefono||''}${wa(p.telefono)}</td><td>${p.correo||''}</td>
+          <td>${p.nombre_cliente||''}</td><td>${p.telefono||''}</td><td>${p.correo||''}</td>
           <td>${p.fecha_vencimiento?p.fecha_vencimiento.split('T')[0]:''}</td>
-          <td>${p.meses_vendidos||1}</td><td>$${fmt(p.precio)}</td><td>${statusBadge(p.fecha_vencimiento)}</td>
-          <td><button class="btn btn-warning btn-sm" onclick='editPerfil(${JSON.stringify(p)})'>✏</button>
-          <button class="btn btn-danger btn-sm" onclick="delPerfil(${p.id})">🗑</button></td></tr>`).join('')}
+          <td>${p.meses_vendidos||1}</td><td>${fmt(p.precio)}</td><td>${statusBadge(p.fecha_vencimiento)}</td>
+          <td style="white-space:nowrap">
+            ${wa(p.telefono, p.nombre_cliente, m.plataforma, p.fecha_vencimiento)}
+            <button class="btn btn-success btn-sm" onclick="renovar('pe',${p.id},'${p.fecha_vencimiento||''}',${p.meses_vendidos||1})">🔄 Renovar</button>
+            <button class="btn btn-warning btn-sm" onclick='editPerfil(${JSON.stringify(p)})'>✏</button>
+            <button class="btn btn-danger btn-sm" onclick="delPerfil(${p.id})">🗑</button>
+          </td></tr>`).join('')}
         </tbody></table></div>`:'<div style="color:#555;font-size:0.85rem;padding:8px 0">Sin perfiles asignados</div>'}
     </div>`).join('');
 }
@@ -381,11 +404,15 @@ async function loadMusica(q=''){
   if(!data.length){ tb.innerHTML='<tr class="empty-row"><td colspan="11">Sin registros</td></tr>'; return; }
   tb.innerHTML=data.map(c=>`<tr>
     <td>${c.nombre||''}</td><td>${c.tipo_producto||''}</td><td>${c.correo||''}</td><td>${c.contrasena||''}</td>
-    <td>${c.telefono||''}${wa(c.telefono)}</td><td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td>
-    <td>${c.meses_vendidos||1}</td><td>$${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
+    <td>${c.telefono||''}</td><td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td>
+    <td>${c.meses_vendidos||1}</td><td>${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
     <td>${statusBadge(c.fecha_vencimiento)}</td>
-    <td><button class="btn btn-warning btn-sm" onclick='editMusica(${JSON.stringify(c)})'>✏</button>
-    <button class="btn btn-danger btn-sm" onclick="delMusica(${c.id})">🗑</button></td></tr>`).join('');
+    <td style="white-space:nowrap">
+      ${wa(c.telefono, c.nombre, c.tipo_producto, c.fecha_vencimiento)}
+      <button class="btn btn-success btn-sm" onclick="renovar('mu',${c.id},'${c.fecha_vencimiento||''}',${c.meses_vendidos||1})">🔄 Renovar</button>
+      <button class="btn btn-warning btn-sm" onclick='editMusica(${JSON.stringify(c)})'>✏</button>
+      <button class="btn btn-danger btn-sm" onclick="delMusica(${c.id})">🗑</button>
+    </td></tr>`).join('');
 }
 function editMusica(c){
   document.getElementById('modal-musica-title').textContent='✏ Editar Música';
@@ -415,11 +442,15 @@ async function loadTV(q=''){
   if(!data.length){ tb.innerHTML='<tr class="empty-row"><td colspan="11">Sin registros</td></tr>'; return; }
   tb.innerHTML=data.map(c=>`<tr>
     <td>${c.nombre||''}</td><td>${c.plataforma||''}</td><td>${c.usuario||''}</td><td>${c.contrasena||''}</td>
-    <td>${c.telefono||''}${wa(c.telefono)}</td><td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td>
-    <td>${c.meses_vendidos||1}</td><td>$${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
+    <td>${c.telefono||''}</td><td>${c.fecha_vencimiento?c.fecha_vencimiento.split('T')[0]:''}</td>
+    <td>${c.meses_vendidos||1}</td><td>${fmt(c.precio)}</td><td>${c.proveedor||''}</td>
     <td>${statusBadge(c.fecha_vencimiento)}</td>
-    <td><button class="btn btn-warning btn-sm" onclick='editTV(${JSON.stringify(c)})'>✏</button>
-    <button class="btn btn-danger btn-sm" onclick="delTV(${c.id})">🗑</button></td></tr>`).join('');
+    <td style="white-space:nowrap">
+      ${wa(c.telefono, c.nombre, c.plataforma, c.fecha_vencimiento)}
+      <button class="btn btn-success btn-sm" onclick="renovar('tv',${c.id},'${c.fecha_vencimiento||''}',${c.meses_vendidos||1})">🔄 Renovar</button>
+      <button class="btn btn-warning btn-sm" onclick='editTV(${JSON.stringify(c)})'>✏</button>
+      <button class="btn btn-danger btn-sm" onclick="delTV(${c.id})">🗑</button>
+    </td></tr>`).join('');
 }
 function editTV(c){
   document.getElementById('modal-tv-title').textContent='✏ Editar TV Digital';

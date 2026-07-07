@@ -73,8 +73,8 @@
             <button class="btn btn-primary" onclick="openModal('perfiles')">+ Agregar</button>
           </div>
         </div>
-        <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Plataforma</th><th>Teléfono</th><th>Correo</th><th>F.Compra</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Proveedor</th><th>Estado</th><th>Acciones</th></tr></thead>
-        <tbody id="tb-perfiles"><tr class="empty-row"><td colspan="11">Cargando...</td></tr></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Nombre</th><th>Plataforma</th><th>Teléfono</th><th>Correo</th><th>F.Compra</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Proveedor</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="tb-perfiles"><tr class="empty-row"><td colspan="12">Cargando...</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -238,8 +238,8 @@ async function delCompleta(id){if(!confirm('¿Eliminar?'))return;await fetch('/a
 async function loadPerfiles(q=''){
   const data=await(await fetch('/api/perfiles?q='+encodeURIComponent(q))).json();
   const tb=document.getElementById('tb-perfiles');
-  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="11">Sin registros</td></tr>';return;}
-  tb.innerHTML=data.map(c=>'<tr><td>'+c.nombre_cliente+'</td><td>'+c.plataforma+'</td><td>'+c.telefono+'</td><td>'+c.correo+'</td><td>'+fd(c.fecha_compra)+'</td><td>'+fd(c.fecha_vencimiento)+'</td><td>'+c.meses_vendidos+'</td><td>$'+fmt(c.precio)+'</td><td>'+c.proveedor+'</td><td>'+statusBadge(c.fecha_vencimiento)+'</td><td><div class="action-btns">'+
+  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="12">Sin registros</td></tr>';return;}
+  tb.innerHTML=data.map(c=>'<tr><td><span class="badge-perfil">Perfil</span></td><td>'+c.nombre_cliente+'</td><td>'+c.plataforma+'</td><td>'+c.telefono+'</td><td>'+c.correo+'</td><td>'+fd(c.fecha_compra)+'</td><td>'+fd(c.fecha_vencimiento)+'</td><td>'+c.meses_vendidos+'</td><td>$'+fmt(c.precio)+'</td><td>'+c.proveedor+'</td><td>'+statusBadge(c.fecha_vencimiento)+'</td><td><div class="action-btns">'+
     wa(c.telefono,c.nombre_cliente,c.plataforma,c.fecha_vencimiento)+
     '<button class="btn btn-success btn-sm" onclick="renovar(\'/api/perfiles/\','+c.id+',\''+fd(c.fecha_vencimiento)+'\','+c.meses_vendidos+',loadPerfiles)">🔄</button> '+
     '<button class="btn btn-warning btn-sm" onclick="editPerfil('+c.id+')">✏</button> '+

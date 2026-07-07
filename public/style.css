@@ -69,11 +69,9 @@ tr:hover td { background: rgba(0,212,255,0.04); }
 .badge-danger { background: rgba(255,60,60,0.15); color: #ff6666; border: 1px solid #ff3c3c33; }
 .empty-row td { text-align: center; color: #555; padding: 32px; }
 
-/* MADRE BLOCK */
-.madre-block { border-bottom: 1px solid #00d4ff11; padding: 14px 16px; }
-.madre-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-.madre-info strong { color: #00d4ff; font-size: 0.95rem; }
-.madre-info span { color: #777; font-size: 0.78rem; margin-left: 6px; }
+
+/* BADGE PERFIL */
+.badge-perfil { display:inline-block; background:rgba(138,43,226,0.18); border:1px solid rgba(138,43,226,0.5); color:#b57bee; border-radius:5px; font-size:0.72rem; padding:2px 8px; font-weight:600; white-space:nowrap; }
 
 /* WA LINK */
 .wa-link { display: inline-flex; align-items: center; gap: 4px; color: #25D366; font-size: 0.76rem; text-decoration: none; background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.3); border-radius: 6px; padding: 3px 7px; white-space: nowrap; }
@@ -116,6 +114,5 @@ tr:hover td { background: rgba(0,212,255,0.04); }
   table { font-size: 0.78rem; }
   th, td { padding: 8px 10px; }
   .btn-sm { padding: 4px 7px; font-size: 0.72rem; }
-  .madre-header { flex-direction: column; }
   .page-header h1 { font-size: 1.2rem; }
 }

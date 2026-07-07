@@ -67,7 +67,7 @@ function auth(req, res, next) {
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const u = process.env.APP_USER || 'rmstreaming';
-  const p = process.env.APP_PASSWORD || 'toreto 28';
+  const p = process.env.APP_PASSWORD || 'toreto28';
   if (username === u && password === p) {
     req.session.loggedIn = true;
     req.session.username = username;

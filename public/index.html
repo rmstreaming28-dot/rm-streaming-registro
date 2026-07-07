@@ -70,11 +70,11 @@
         <div class="card-header"><h2>Registros</h2>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <input class="search-input" placeholder="🔍 Buscar..." oninput="loadPerfiles(this.value)">
-            <button class="btn btn-primary" onclick="openModal('perfiles')">+ Agregar</button>
+            <button class="btn btn-primary" onclick="openModal('perfiles')">+ Agregar Perfil</button>
           </div>
         </div>
-        <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Nombre</th><th>Plataforma</th><th>Teléfono</th><th>Correo</th><th>F.Compra</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Proveedor</th><th>Estado</th><th>Acciones</th></tr></thead>
-        <tbody id="tb-perfiles"><tr class="empty-row"><td colspan="12">Cargando...</td></tr></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>Perfil</th><th>Cliente</th><th>Producto</th><th>Teléfono</th><th>F.Compra</th><th>Vencimiento</th><th>Meses</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="tb-perfiles"><tr class="empty-row"><td colspan="10">Cargando...</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -125,11 +125,11 @@
 <!-- MODAL PERFILES -->
 <div id="modal-perfiles" class="modal-overlay">
   <div class="modal"><h3 id="modal-perfiles-title">➕ Nuevo Perfil</h3><input type="hidden" id="pe-id">
-    <div class="form-row"><div class="field"><label>Nombre cliente</label><input id="pe-nombre_cliente"></div><div class="field"><label>Plataforma</label><input id="pe-plataforma" placeholder="Netflix, Disney+..."></div></div>
-    <div class="form-row"><div class="field"><label>Teléfono / WhatsApp</label><input id="pe-telefono" placeholder="+58..."></div><div class="field"><label>Correo</label><input id="pe-correo" type="email"></div></div>
-    <div class="form-row"><div class="field"><label>Proveedor</label><input id="pe-proveedor"></div><div class="field"><label>Precio (USD)</label><input id="pe-precio" type="number" step="0.01" value="0"></div></div>
+    <div class="form-row"><div class="field"><label>Nombre del Perfil</label><input id="pe-nombre_perfil" placeholder="Perfil 1, Pantalla 3..."></div><div class="field"><label>Nombre del Cliente</label><input id="pe-nombre_cliente"></div></div>
+    <div class="form-row"><div class="field"><label>Producto</label><input id="pe-plataforma" placeholder="Netflix, Disney+, HBO..."></div><div class="field"><label>Teléfono / WhatsApp</label><input id="pe-telefono" placeholder="+58..."></div></div>
     <div class="form-row"><div class="field"><label>Fecha Compra</label><input id="pe-fecha_compra" type="date"></div><div class="field"><label>Fecha Vencimiento</label><input id="pe-fecha_vencimiento" type="date"></div></div>
-    <div class="form-row single"><div class="field"><label>Meses vendidos</label><input id="pe-meses_vendidos" type="number" value="1" min="1"></div></div>
+    <div class="form-row"><div class="field"><label>Fecha Compra</label><input id="pe-fecha_compra" type="date"></div><div class="field"><label>Fecha Vencimiento</label><input id="pe-fecha_vencimiento" type="date"></div></div>
+
     <div class="modal-actions"><button class="btn btn-danger" onclick="closeModal('perfiles')">Cancelar</button><button class="btn btn-primary" onclick="savePerfil()">Guardar</button></div>
   </div>
 </div>
@@ -238,17 +238,19 @@ async function delCompleta(id){if(!confirm('¿Eliminar?'))return;await fetch('/a
 async function loadPerfiles(q=''){
   const data=await(await fetch('/api/perfiles?q='+encodeURIComponent(q))).json();
   const tb=document.getElementById('tb-perfiles');
-  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="12">Sin registros</td></tr>';return;}
-  tb.innerHTML=data.map(c=>'<tr><td><span class="badge-perfil">Perfil</span></td><td>'+c.nombre_cliente+'</td><td>'+c.plataforma+'</td><td>'+c.telefono+'</td><td>'+c.correo+'</td><td>'+fd(c.fecha_compra)+'</td><td>'+fd(c.fecha_vencimiento)+'</td><td>'+c.meses_vendidos+'</td><td>$'+fmt(c.precio)+'</td><td>'+c.proveedor+'</td><td>'+statusBadge(c.fecha_vencimiento)+'</td><td><div class="action-btns">'+
-    wa(c.telefono,c.nombre_cliente,c.plataforma,c.fecha_vencimiento)+
-    '<button class="btn btn-success btn-sm" onclick="renovar(\'/api/perfiles/\','+c.id+',\''+fd(c.fecha_vencimiento)+'\','+c.meses_vendidos+',loadPerfiles)">🔄</button> '+
-    '<button class="btn btn-warning btn-sm" onclick="editPerfil('+c.id+')">✏</button> '+
-    '<button class="btn btn-danger btn-sm" onclick="delPerfil('+c.id+')">🗑</button></div></td></tr>').join('');
+  if(!data.length){tb.innerHTML='<tr class="empty-row"><td colspan="10">Sin registros</td></tr>';return;}
+  tb.innerHTML=data.map(c=>{
+    const n=c.telefono?c.telefono.replace(/\D/g,''):'';
+    const f=c.fecha_vencimiento?fd(c.fecha_vencimiento):'pronto';
+    const msg=encodeURIComponent('Hola '+(c.nombre_cliente||'')+'! 👋\nTu *Perfil: '+(c.nombre_perfil||'')+'* de *'+(c.plataforma||'')+'* vence el *'+f+'*.\n\n¿Deseas renovar? 😊');
+    const waBtn=n?'<a class="wa-link" href="https://wa.me/'+n+'?text='+msg+'" target="_blank">💬 WA</a> ':'';
+    return '<tr><td>'+(c.nombre_perfil||'—')+'</td><td>'+(c.nombre_cliente||'')+'</td><td>'+(c.plataforma||'')+'</td><td>'+(c.telefono||'')+'</td><td>'+fd(c.fecha_compra)+'</td><td>'+fd(c.fecha_vencimiento)+'</td><td>'+c.meses_vendidos+'</td><td>$'+fmt(c.precio)+'</td><td>'+statusBadge(c.fecha_vencimiento)+'</td><td><div class="action-btns">'+waBtn+'<button class="btn btn-success btn-sm" title="Renovar" onclick="renovar(\'/api/perfiles/\','+c.id+',\''+fd(c.fecha_vencimiento)+'\','+c.meses_vendidos+',loadPerfiles)">🔄</button> <button class="btn btn-warning btn-sm" title="Editar" onclick="editPerfil('+c.id+')">✏</button> <button class="btn btn-danger btn-sm" title="Eliminar" onclick="delPerfil('+c.id+')">🗑</button></div></td></tr>';
+  }).join('');
   data.forEach(c=>window['_pe'+c.id]=c);
 }
-function editPerfil(id){const c=window['_pe'+id];document.getElementById('modal-perfiles-title').textContent='✏ Editar Perfil';setVal('pe-id',c.id);setVal('pe-nombre_cliente',c.nombre_cliente);setVal('pe-plataforma',c.plataforma);setVal('pe-telefono',c.telefono);setVal('pe-correo',c.correo);setVal('pe-proveedor',c.proveedor);setVal('pe-fecha_compra',fd(c.fecha_compra));setVal('pe-fecha_vencimiento',fd(c.fecha_vencimiento));setVal('pe-meses_vendidos',c.meses_vendidos);setVal('pe-precio',c.precio);openModal('perfiles');}
-async function savePerfil(){const id=val('pe-id');const b={nombre_cliente:val('pe-nombre_cliente'),plataforma:val('pe-plataforma'),telefono:val('pe-telefono'),correo:val('pe-correo'),proveedor:val('pe-proveedor'),fecha_compra:val('pe-fecha_compra')||null,fecha_vencimiento:val('pe-fecha_vencimiento')||null,meses_vendidos:parseInt(val('pe-meses_vendidos'))||1,precio:parseFloat(val('pe-precio'))||0};const r=await fetch(id?'/api/perfiles/'+id:'/api/perfiles',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});if(r.ok){closeModal('perfiles');loadPerfiles();}else alert('Error');}
-async function delPerfil(id){if(!confirm('¿Eliminar?'))return;await fetch('/api/perfiles/'+id,{method:'DELETE'});loadPerfiles();}
+function editPerfil(id){const c=window['_pe'+id];document.getElementById('modal-perfiles-title').textContent='✏ Editar Perfil';setVal('pe-id',c.id);setVal('pe-nombre_perfil',c.nombre_perfil||'');setVal('pe-nombre_cliente',c.nombre_cliente||'');setVal('pe-plataforma',c.plataforma||'');setVal('pe-telefono',c.telefono||'');setVal('pe-fecha_compra',fd(c.fecha_compra));setVal('pe-fecha_vencimiento',fd(c.fecha_vencimiento));setVal('pe-meses_vendidos',c.meses_vendidos||1);setVal('pe-precio',c.precio||0);openModal('perfiles');}
+async function savePerfil(){const id=val('pe-id');const b={nombre_perfil:val('pe-nombre_perfil'),nombre_cliente:val('pe-nombre_cliente'),plataforma:val('pe-plataforma'),telefono:val('pe-telefono'),fecha_compra:val('pe-fecha_compra')||null,fecha_vencimiento:val('pe-fecha_vencimiento')||null,meses_vendidos:parseInt(val('pe-meses_vendidos'))||1,precio:parseFloat(val('pe-precio'))||0};const r=await fetch(id?'/api/perfiles/'+id:'/api/perfiles',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});if(r.ok){closeModal('perfiles');loadPerfiles();}else alert('Error al guardar');}
+async function delPerfil(id){if(!confirm('¿Eliminar este perfil?'))return;await fetch('/api/perfiles/'+id,{method:'DELETE'});loadPerfiles();}
 
 // ── MÚSICA ──
 async function loadMusica(q=''){
